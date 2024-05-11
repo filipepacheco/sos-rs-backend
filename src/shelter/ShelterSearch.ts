@@ -27,22 +27,19 @@ class ShelterSearch {
     this.formProps = { ...props };
   }
 
-  priority(supplyIds: string[] = []): Prisma.ShelterWhereInput {
+  get priority(): Prisma.ShelterWhereInput[] {
     if (this.formProps.priority) {
-      return {
-        shelterSupplies: {
-          some: {
-            priority: +this.formProps.priority,
-            supplyId:
-              supplyIds.length > 0
-                ? {
-                    in: supplyIds,
-                  }
-                : undefined,
+      return [
+        {
+          shelterSupplies: {
+            some: {
+              priority: +this.formProps.priority,
+            },
           },
         },
-      };
-    } else return {};
+      ];
+    }
+    return [];
   }
 
   get shelterStatus(): Prisma.ShelterWhereInput[] {
@@ -69,14 +66,11 @@ class ShelterSearch {
     }
   }
 
-  supplyCategoryIds(
-    priority?: SupplyPriority | null,
-  ): Prisma.ShelterWhereInput {
+  get supplyCategoryIds(): Prisma.ShelterWhereInput {
     if (!this.formProps.supplyCategoryIds) return {};
     return {
       shelterSupplies: {
         some: {
-          priority: priority ? +priority : undefined,
           supply: {
             supplyCategoryId: {
               in: this.formProps.supplyCategoryIds,
@@ -126,9 +120,10 @@ class ShelterSearch {
     const queryData = {
       AND: [
         { OR: this.search },
-        { OR: this.shelterStatus },
-        this.priority(this.formProps.supplyIds),
-        this.supplyCategoryIds(this.formProps.priority),
+        ...this.priority,
+        ...this.shelterStatus,
+        this.supplyCategoryIds,
+        this.supplyIds,
       ],
     };
 
@@ -178,10 +173,7 @@ function parseTagResponse(
         }
         if (
           tags.NeedVolunteers &&
-          voluntaryIds.includes(shelterSupply.supply.supplyCategoryId) &&
-          [SupplyPriority.Urgent, SupplyPriority.Needing].includes(
-            shelterSupply.priority,
-          )
+          voluntaryIds.includes(shelterSupply.supply.supplyCategoryId)
         ) {
           if (qtd.NeedVolunteers < tags.NeedVolunteers) {
             qtd.NeedVolunteers++;
