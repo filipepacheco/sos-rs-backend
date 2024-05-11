@@ -13,7 +13,7 @@ export class DistributionCenterGuard extends AuthGuard('jwt') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     await super.canActivate(context);
     const ok = await canActivate(context, [
-      AccessLevel.Staff,
+      AccessLevel.Admin,
       AccessLevel.DistributionCenter,
     ]);
     if (ok) return true;
